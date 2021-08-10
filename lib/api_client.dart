@@ -54,6 +54,43 @@ class ApiClient {
     }
   }
 
+  static Future request(
+    String url, {
+    String method = "get",
+    Map<String, dynamic> param,
+    Map<String, dynamic> header,
+    String group,
+  }) async {
+    if (Strings.isEmpty(url)) {
+      throw Exception('url ($url) is invalid');
+    }
+    if (Collections.isEmpty(_apiHosts)) {
+      throw Exception('have you forget invoke ApiClient.initialize() ?');
+    }
+
+    var _host = getHost(group: group);
+    if (Strings.isEmpty(_host)) {
+      throw Exception('not host defined for ${_currEnv.toString()}');
+    }
+
+    if (!_isDioInitialized()) {
+      _initDioInstance();
+    }
+    _dioInstance.options.baseUrl = _host;
+    header = _buildHeaders(header);
+    param = _signParams(param);
+    _dioInstance.options.headers.addAll(header);
+    Options options = Options();
+    options.method = method;
+    try {
+      final result = await _dioInstance.request(url,
+          queryParameters: param, data: param, options: options);
+      return result;
+    } on DioError catch (error) {
+      throw error;
+    }
+  }
+
   static void post(String url,
       {String group,
       Map<String, Object> header,
