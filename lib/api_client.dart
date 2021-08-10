@@ -41,7 +41,7 @@ class ApiClient {
 
   static void post(String url,
       {Map<String, Object> header,
-      Map<String, String> params,
+      Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest(url, "post",
@@ -50,7 +50,7 @@ class ApiClient {
 
   static void get(String url,
       {Map<String, Object> header,
-      Map<String, String> params,
+      Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest(url, "get",
