@@ -13,7 +13,7 @@ import 'strings.dart';
 typedef void OnSuccess<T>(T data);
 typedef void OnError(int code, String message);
 
-enum HostEnv { Env_Prod, Env_Qa, Env_Env }
+enum HostEnv { Env_Prod, Env_Qa, Env_Dev }
 
 class ApiClient {
   static const String TAG = "ApiClient";
@@ -22,10 +22,10 @@ class ApiClient {
   static Map<HostEnv, String> _apiHosts = Map();
   static Dio _dioInstance;
 
-  static void initialize({@required String prod, String qa, String env}) {
+  static void initialize({@required String prod, String qa, String dev}) {
     _apiHosts[HostEnv.Env_Prod] = prod;
     _apiHosts[HostEnv.Env_Qa] = qa;
-    _apiHosts[HostEnv.Env_Env] = env;
+    _apiHosts[HostEnv.Env_Dev] = dev;
   }
 
   static void switchEnvorment(HostEnv env) {
