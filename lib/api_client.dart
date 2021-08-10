@@ -21,6 +21,7 @@ class ApiClient {
   static HostEnv _currEnv = HostEnv.Env_Prod;
   static Map<HostEnv, String> _apiHosts = Map();
   static Dio _dioInstance;
+  static Map<String, String> _hostGroups;
 
   static void initialize({@required String prod, String qa, String dev}) {
     _apiHosts[HostEnv.Env_Prod] = prod;
@@ -35,30 +36,55 @@ class ApiClient {
     _currEnv = env;
   }
 
-  static String getHost() {
-    return _apiHosts[_currEnv];
+  static void supportMultiHost(Map<String, String> hostGroups) {
+    _hostGroups = hostGroups;
+  }
+
+  static String getHost({String group}) {
+    if (group == null) {
+      return _apiHosts[_currEnv];
+    } else {
+      if (Collections.isEmpty(_hostGroups)) {
+        throw "Please call supportMultiHost first !";
+      }
+      if (!_hostGroups.containsKey(group)) {
+        throw "Can not find host for group:$group";
+      }
+      return _hostGroups[group];
+    }
   }
 
   static void post(String url,
-      {Map<String, Object> header,
+      {String group,
+      Map<String, Object> header,
       Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest(url, "post",
-        param: params, header: header, onSuccess: onSuccess, onError: onError);
+        group: group,
+        param: params,
+        header: header,
+        onSuccess: onSuccess,
+        onError: onError);
   }
 
   static void get(String url,
-      {Map<String, Object> header,
+      {String group,
+      Map<String, Object> header,
       Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest(url, "get",
-        param: params, header: header, onSuccess: onSuccess, onError: onError);
+        group: group,
+        param: params,
+        header: header,
+        onSuccess: onSuccess,
+        onError: onError);
   }
 
   static Future _sendRequest<T>(String url, String method,
-      {Map<String, dynamic> param,
+      {String group,
+      Map<String, dynamic> param,
       Map<String, dynamic> header,
       OnSuccess onSuccess,
       OnError onError}) async {
@@ -73,7 +99,7 @@ class ApiClient {
       throw Exception('have you forget invoke ApiClient.initialize() ?');
     }
 
-    var _host = getHost();
+    var _host = getHost(group: group);
     if (Strings.isEmpty(_host)) {
       throw Exception('not host defined for ${_currEnv.toString()}');
     }
