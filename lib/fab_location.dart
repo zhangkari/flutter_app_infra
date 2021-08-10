@@ -5,7 +5,7 @@ class FABLocation extends FloatingActionButtonLocation {
   final double offsetX;
   final double offsetY;
 
-  FABLocation(this._location, {@required this.offsetX, @required this.offsetY});
+  FABLocation(this._location, {this.offsetX, this.offsetY});
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
