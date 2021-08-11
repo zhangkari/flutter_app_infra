@@ -234,7 +234,7 @@ class ApiClient {
 
     Map<String, dynamic> header = {};
     header.putIfAbsent('Accept', () => 'text/plain');
-    header.putIfAbsent('Content-Type', () => 'text/plain');
+    header.putIfAbsent('Content-Type', () => 'application/json');
     var _platform = _getPlatform();
     if (_platform.isNotEmpty) {
       header.putIfAbsent("User-Agent", () => _platform);
