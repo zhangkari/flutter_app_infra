@@ -83,9 +83,15 @@ class ApiClient {
     Options options = Options();
     options.method = method;
     try {
-      final result = await _dioInstance.request(url,
-          queryParameters: param, data: param, options: options);
-      return result;
+      if (method == null || method.toLowerCase() == "get") {
+        final result = await _dioInstance.get(url,
+            queryParameters: param, options: options);
+        return result;
+      } else {
+        final result =
+            await _dioInstance.post(url, data: param, options: options);
+        return result;
+      }
     } on DioError catch (error) {
       throw error;
     }
