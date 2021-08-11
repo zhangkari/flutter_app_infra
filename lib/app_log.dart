@@ -1,3 +1,5 @@
+library app_infra;
+
 class AppLog {
   static void d(String tag, String msg) {
     print('$tag => $msg');

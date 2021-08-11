@@ -3,12 +3,11 @@ library app_infra;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:app_infra/app_log.dart';
+import 'package:app_infra/collections.dart';
+import 'package:app_infra/strings.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-
-import 'app_log.dart';
-import 'collections.dart';
-import 'strings.dart';
 
 typedef void OnSuccess<T>(T data);
 typedef void OnError(int code, String message);
@@ -54,7 +53,7 @@ class ApiClient {
     }
   }
 
-  static Future request(
+  static Future request<T>(
     String url, {
     String method = "get",
     Map<String, dynamic> param,
@@ -83,27 +82,21 @@ class ApiClient {
     Options options = Options();
     options.method = method;
     try {
-      if (method == null || method.toLowerCase() == "get") {
-        final result = await _dioInstance.get(url,
-            queryParameters: param, options: options);
-        return result;
-      } else {
-        final result =
-            await _dioInstance.post(url, data: param, options: options);
-        return result;
-      }
+      final result = await _dioInstance.request<T>(url,
+          data: param, queryParameters: param, options: options);
+      return result;
     } on DioError catch (error) {
       throw error;
     }
   }
 
-  static void post(String url,
+  static void post<T>(String url,
       {String group,
       Map<String, Object> header,
       Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
-    _sendRequest(url, "post",
+    _sendRequest<T>(url, "post",
         group: group,
         param: params,
         header: header,
@@ -111,13 +104,13 @@ class ApiClient {
         onError: onError);
   }
 
-  static void get(String url,
+  static void get<T>(String url,
       {String group,
       Map<String, Object> header,
       Map<String, Object> params,
       OnSuccess onSuccess,
       OnError onError}) {
-    _sendRequest(url, "get",
+    _sendRequest<T>(url, "get",
         group: group,
         param: params,
         header: header,
@@ -129,7 +122,7 @@ class ApiClient {
       {String group,
       Map<String, dynamic> param,
       Map<String, dynamic> header,
-      OnSuccess onSuccess,
+      OnSuccess<T> onSuccess,
       OnError onError}) async {
     int _code;
     String _msg;
