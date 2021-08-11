@@ -1,3 +1,5 @@
+library app_infra;
+
 import 'package:flutter/material.dart';
 
 class FABLocation extends FloatingActionButtonLocation {

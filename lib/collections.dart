@@ -1,3 +1,5 @@
+library app_infra;
+
 class Collections {
   static bool isEmpty(Object obj) {
     if (obj == null) {

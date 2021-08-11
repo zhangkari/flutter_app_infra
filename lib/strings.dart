@@ -1,3 +1,5 @@
+library app_infra;
+
 class Strings {
   static bool isEmpty(String text) {
     return text == null || text.isEmpty;

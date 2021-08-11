@@ -1,4 +1,4 @@
-import 'package:app_infra/api/api_client.dart';
+import 'package:app_infra/api.dart';
 import 'package:app_infra/app_log.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
