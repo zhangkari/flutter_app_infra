@@ -76,7 +76,10 @@ class ApiClient {
     try {
       final result = await _dioInstance.request<T>(url,
           data: param, queryParameters: param, options: options);
-      _x_auth = result.headers.value('x-authorization');
+      String _auth = result.headers.value('x-authorization');
+      if (Strings.isNotEmpty(_auth)) {
+        _x_auth = _auth;
+      }
       return result;
     } on DioError catch (error) {
       throw error;
@@ -183,7 +186,10 @@ class ApiClient {
         return;
       }
 
-      _x_auth = response.headers.value('x-authorization');
+      String _auth = response.headers.value('x-authorization');
+      if (Strings.isNotEmpty(_auth)) {
+        _x_auth = _auth;
+      }
 
       Map<String, dynamic> respData = jsonDecode(response.toString());
 
