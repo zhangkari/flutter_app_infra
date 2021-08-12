@@ -12,6 +12,7 @@ class ApiClient {
   static Map<HostEnv, String> _apiHosts = Map();
   static Dio _dioInstance;
   static Map<String, String> _hostGroups;
+  static String _x_auth;
 
   static void initialize({@required String prod, String qa, String dev}) {
     _apiHosts[HostEnv.Env_Prod] = prod;
@@ -75,6 +76,7 @@ class ApiClient {
     try {
       final result = await _dioInstance.request<T>(url,
           data: param, queryParameters: param, options: options);
+      _x_auth = result.headers.value('x-authorization');
       return result;
     } on DioError catch (error) {
       throw error;
@@ -181,6 +183,8 @@ class ApiClient {
         return;
       }
 
+      _x_auth = response.headers.value('x-authorization');
+
       Map<String, dynamic> respData = jsonDecode(response.toString());
 
       _code = respData['code'];
@@ -230,6 +234,7 @@ class ApiClient {
     if (headers == null) {
       headers = new Map();
     }
+    headers['x-authorization'] = _x_auth;
     return headers;
   }
 
