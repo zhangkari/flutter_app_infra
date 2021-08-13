@@ -27,6 +27,16 @@ class ApiClient {
     _currEnv = env;
   }
 
+  static void setAuthToken(String token) {
+    if (Strings.isNotEmpty(token)) {
+      _x_auth = token;
+    }
+  }
+
+  static void clearAuthToken(String token) {
+    _x_auth = '';
+  }
+
   static void supportMultiHost(Map<String, String> hostGroups) {
     _hostGroups = hostGroups;
   }
@@ -77,9 +87,7 @@ class ApiClient {
       final result = await _dioInstance.request<T>(url,
           data: param, queryParameters: param, options: options);
       String _auth = result.headers.value('x-authorization');
-      if (Strings.isNotEmpty(_auth)) {
-        _x_auth = _auth;
-      }
+      setAuthToken(_auth);
       return result;
     } on DioError catch (error) {
       throw error;
@@ -187,9 +195,7 @@ class ApiClient {
       }
 
       String _auth = response.headers.value('x-authorization');
-      if (Strings.isNotEmpty(_auth)) {
-        _x_auth = _auth;
-      }
+      setAuthToken(_auth);
 
       Map<String, dynamic> respData = jsonDecode(response.toString());
 
