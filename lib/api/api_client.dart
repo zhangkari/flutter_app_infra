@@ -33,6 +33,10 @@ class ApiClient {
     }
   }
 
+  static String getAuthToken() {
+    return _x_auth;
+  }
+
   static void clearAuthToken(String token) {
     _x_auth = '';
   }
