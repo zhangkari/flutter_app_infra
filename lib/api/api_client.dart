@@ -14,6 +14,16 @@ class ApiClient {
   static Map<String, String> _hostGroups;
   static String _x_auth;
 
+  static String proxy_ip = '192.168.1.100';
+  static int proxy_port = 8888;
+
+  static void setProxy(String ip, int port) {
+    assert(Strings.isNotEmpty(ip));
+    assert(port > 0 && port < 65535);
+    proxy_ip = ip;
+    proxy_port = port;
+  }
+
   static void initialize({@required String prod, String qa, String dev}) {
     _apiHosts[HostEnv.Env_Prod] = prod;
     _apiHosts[HostEnv.Env_Qa] = qa;
@@ -228,13 +238,14 @@ class ApiClient {
       return;
     }
     _dioInstance = new Dio();
-    _dioInstance.options.connectTimeout = 5 * 1000;
-    _dioInstance.options.receiveTimeout = 5 * 1000;
-    _dioInstance.options.sendTimeout = 5 * 1000;
+    _dioInstance.options.connectTimeout = 30 * 1000;
+    _dioInstance.options.receiveTimeout = 30 * 1000;
+    _dioInstance.options.sendTimeout = 30 * 1000;
     _dioInstance.options.responseType = ResponseType.json;
     _dioInstance.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
     );
+    _setupProxy();
 
     Map<String, dynamic> header = {};
     header.putIfAbsent('Accept', () => 'text/plain');
@@ -244,6 +255,23 @@ class ApiClient {
       header.putIfAbsent("User-Agent", () => _platform);
     }
     _dioInstance.options.headers.addAll(header);
+  }
+
+  static void _setupProxy() {
+    if (_dioInstance == null) {
+      return;
+    }
+    (_dioInstance.httpClientAdapter as DefaultHttpClientAdapter)
+        .onHttpClientCreate = (client) {
+      //解决安卓https抓包的问题
+      client.badCertificateCallback =
+          (X509Certificate cert, String host, int port) {
+        return Platform.isAndroid;
+      };
+      client.findProxy = (uri) {
+        return "PROXY $proxy_ip:$proxy_port";
+      };
+    };
   }
 
   static Map<String, dynamic> _buildHeaders(Map<String, dynamic> headers) {
