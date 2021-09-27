@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:app_infra/app_log.dart';
 import 'package:app_infra/collections.dart';
 import 'package:app_infra/strings.dart';
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 
