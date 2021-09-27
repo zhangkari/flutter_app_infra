@@ -14,8 +14,8 @@ class ApiClient {
   static Map<String, String> _hostGroups;
   static String _x_auth;
 
-  static String proxy_ip = '192.168.1.100';
-  static int proxy_port = 8888;
+  static String proxy_ip = '';
+  static int proxy_port = 0;
 
   static void setProxy(String ip, int port) {
     assert(Strings.isNotEmpty(ip));
@@ -261,6 +261,11 @@ class ApiClient {
     if (_dioInstance == null) {
       return;
     }
+
+    if (Strings.isEmpty(proxy_ip) || proxy_port <= 100) {
+      return;
+    }
+
     (_dioInstance.httpClientAdapter as DefaultHttpClientAdapter)
         .onHttpClientCreate = (client) {
       //解决安卓https抓包的问题
