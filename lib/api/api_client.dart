@@ -245,6 +245,7 @@ class ApiClient {
     _dioInstance.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
     );
+    _dioInstance.interceptors.add(DioLogInterceptor());
     _setupProxy();
 
     Map<String, dynamic> header = {};

@@ -7,6 +7,7 @@ import 'package:app_infra/collections.dart';
 import 'package:app_infra/strings.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_log/dio_log.dart';
 import 'package:flutter/widgets.dart';
 
 part 'api/api_client.dart';
