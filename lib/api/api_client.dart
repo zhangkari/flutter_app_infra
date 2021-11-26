@@ -12,7 +12,7 @@ class ApiClient {
   static Map<HostEnv, String> _apiHosts = Map();
   static Dio _dioInstance;
   static Map<String, String> _hostGroups;
-  static String _x_auth;
+  static List<String> _x_auth_tokens = ["", ""];
 
   static String proxy_ip = '';
   static int proxy_port = 0;
@@ -37,18 +37,32 @@ class ApiClient {
     _currEnv = env;
   }
 
-  static void setAuthToken(String token) {
+  static void setAuthToken(String token, {int machineNo = 0}) {
     if (Strings.isNotEmpty(token)) {
-      _x_auth = token;
+      if (machineNo < 0 || machineNo >= _x_auth_tokens.length) {
+        throw Exception("postion in range [0, ${_x_auth_tokens.length - 1}]");
+      }
+      _x_auth_tokens[machineNo] = token;
     }
   }
 
-  static String getAuthToken() {
-    return _x_auth;
+  static String getAuthToken({int machineNo = 0}) {
+    if (machineNo < 0 || machineNo >= _x_auth_tokens.length) {
+      throw Exception(
+          "machineNo must in range [0, ${_x_auth_tokens.length - 1}]");
+    }
+    return _x_auth_tokens[machineNo];
   }
 
-  static void clearAuthToken(String token) {
-    _x_auth = '';
+  static void clearAuthTokens() {
+    _x_auth_tokens.clear();
+  }
+
+  static void clearAuthToken({int machineNo = 0}) {
+    if (machineNo < 0 || machineNo >= _x_auth_tokens.length) {
+      throw Exception("postion in range [0, ${_x_auth_tokens.length - 1}]");
+    }
+    _x_auth_tokens[machineNo] = "";
   }
 
   static void supportMultiHost(Map<String, String> hostGroups) {
@@ -75,6 +89,10 @@ class ApiClient {
     Map<String, dynamic> param,
     Map<String, dynamic> header,
     String group,
+    int machineNo,
+    int connectTimeout,
+    int sendTimeout,
+    int recevieTimeout,
   }) async {
     if (Strings.isEmpty(url)) {
       throw Exception('url ($url) is invalid');
@@ -88,9 +106,11 @@ class ApiClient {
       throw Exception('not host defined for ${_currEnv.toString()}');
     }
 
-    if (!_isDioInitialized()) {
-      _initDioInstance();
-    }
+    _initDioInstance(
+        connectTimeout: connectTimeout,
+        sendTimeout: sendTimeout,
+        recevieTimeout: recevieTimeout);
+
     _dioInstance.options.baseUrl = _host;
     header = _buildHeaders(header);
     param = _signParams(param);
@@ -101,7 +121,10 @@ class ApiClient {
       final result = await _dioInstance.request<T>(url,
           data: param, queryParameters: param, options: options);
       String _auth = result.headers.value('x-authorization');
-      setAuthToken(_auth);
+      if (machineNo < 0 || machineNo >= _x_auth_tokens.length) {
+        throw Exception("postion in range [0, ${_x_auth_tokens.length - 1}]");
+      }
+      setAuthToken(_auth, machineNo: machineNo);
       return result;
     } on DioError catch (error) {
       throw error;
@@ -112,12 +135,20 @@ class ApiClient {
       {String group,
       Map<String, Object> header,
       Map<String, Object> params,
+      int machineNo,
+      int connectTimout,
+      int receiveTimeout,
+      int sendTimeout,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest<T>(url, "post",
         group: group,
         param: params,
         header: header,
+        machineNo: machineNo,
+        connectTimeout: connectTimout,
+        recevieTimeout: receiveTimeout,
+        sendTimeout: sendTimeout,
         onSuccess: onSuccess,
         onError: onError);
   }
@@ -126,12 +157,20 @@ class ApiClient {
       {String group,
       Map<String, Object> header,
       Map<String, Object> params,
+      int machineNo,
+      int connectTimout,
+      int receiveTimeout,
+      int sendTimeout,
       OnSuccess onSuccess,
       OnError onError}) {
     _sendRequest<T>(url, "get",
         group: group,
         param: params,
         header: header,
+        machineNo: machineNo,
+        connectTimeout: connectTimout,
+        recevieTimeout: receiveTimeout,
+        sendTimeout: sendTimeout,
         onSuccess: onSuccess,
         onError: onError);
   }
@@ -140,6 +179,10 @@ class ApiClient {
       {String group,
       Map<String, dynamic> param,
       Map<String, dynamic> header,
+      int machineNo,
+      int connectTimeout,
+      int recevieTimeout,
+      int sendTimeout,
       OnSuccess<T> onSuccess,
       OnError onError}) async {
     int _code;
@@ -159,7 +202,10 @@ class ApiClient {
     }
 
     if (!_isDioInitialized()) {
-      _initDioInstance();
+      _initDioInstance(
+          connectTimeout: connectTimeout,
+          recevieTimeout: recevieTimeout,
+          sendTimeout: sendTimeout);
     }
 
     _dioInstance.options.baseUrl = _host;
@@ -208,8 +254,11 @@ class ApiClient {
         return;
       }
 
+      if (machineNo < 0 || machineNo >= _x_auth_tokens.length) {
+        throw Exception("postion in range [0, ${_x_auth_tokens.length - 1}]");
+      }
       String _auth = response.headers.value('x-authorization');
-      setAuthToken(_auth);
+      setAuthToken(_auth, machineNo: machineNo);
 
       Map<String, dynamic> respData = jsonDecode(response.toString());
 
@@ -233,29 +282,33 @@ class ApiClient {
     return _dioInstance != null;
   }
 
-  static void _initDioInstance() {
-    if (_dioInstance != null) {
-      return;
-    }
-    _dioInstance = new Dio();
-    _dioInstance.options.connectTimeout = 30 * 1000;
-    _dioInstance.options.receiveTimeout = 30 * 1000;
-    _dioInstance.options.sendTimeout = 30 * 1000;
-    _dioInstance.options.responseType = ResponseType.json;
-    _dioInstance.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
-    );
-    _dioInstance.interceptors.add(DioLogInterceptor());
-    _setupProxy();
+  static void _initDioInstance({
+    int connectTimeout = 30 * 1000,
+    int recevieTimeout = 30 * 1000,
+    int sendTimeout = 30 * 1000,
+  }) {
+    if (_dioInstance == null) {
+      _dioInstance = new Dio();
+      _dioInstance.interceptors.add(
+        LogInterceptor(requestBody: true, responseBody: true),
+      );
+      _dioInstance.interceptors.add(DioLogInterceptor());
+      _setupProxy();
 
-    Map<String, dynamic> header = {};
-    header.putIfAbsent('Accept', () => 'text/plain');
-    header.putIfAbsent('Content-Type', () => 'application/json');
-    var _platform = _getPlatform();
-    if (_platform.isNotEmpty) {
-      header.putIfAbsent("User-Agent", () => _platform);
+      Map<String, dynamic> header = {};
+      header.putIfAbsent('Accept', () => 'text/plain');
+      header.putIfAbsent('Content-Type', () => 'application/json');
+      var _platform = _getPlatform();
+      if (_platform.isNotEmpty) {
+        header.putIfAbsent("User-Agent", () => _platform);
+      }
+      _dioInstance.options.headers.addAll(header);
     }
-    _dioInstance.options.headers.addAll(header);
+
+    _dioInstance.options.connectTimeout = connectTimeout;
+    _dioInstance.options.receiveTimeout = recevieTimeout;
+    _dioInstance.options.sendTimeout = sendTimeout;
+    _dioInstance.options.responseType = ResponseType.json;
   }
 
   static void _setupProxy() {
